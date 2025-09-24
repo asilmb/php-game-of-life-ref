@@ -1,16 +1,20 @@
 <?php declare(strict_types = 1);
 
-namespace Life;
+namespace Life\Persistence\Xml;
 
+use Life\Exception\InvalidInputException;
+use Life\Model\Cell;
+use Life\Model\GameState;
+use Life\Persistence\GameReaderInterface;
 use SimpleXMLElement;
 
-class XmlFileReader
+class XmlFileReader implements GameReaderInterface
 {
     public function __construct(private readonly string $filePath)
     {
     }
 
-    public function loadFile(): array
+    public function load(): GameState
     {
         $life = $this->loadXmlFile();
         $this->validateXmlFile($life);
@@ -32,7 +36,7 @@ class XmlFileReader
 
         $cells = $this->readCells($life, $worldSize, $speciesCount);
 
-        return [$worldSize, $speciesCount, $cells, $iterationsCount];
+        return GameState::create($worldSize, $speciesCount, $cells, $iterationsCount);
     }
 
     private function loadXmlFile(): SimpleXMLElement
@@ -108,13 +112,13 @@ class XmlFileReader
                 $availableSpecies = [$existingCell, $species];
                 $finalSpecies = $availableSpecies[array_rand($availableSpecies)];
             }
-            $cells[$y][$x] = $finalSpecies;
+            $cells[$y][$x] = new Cell($x, $y, $finalSpecies);
         }
         for ($y = 0; $y < $worldSize; $y++) {
             $cells[$y] ??= [];
             for ($x = 0; $x < $worldSize; $x++) {
                 if (!isset($cells[$y][$x])) {
-                    $cells[$y][$x] = null;
+                    $cells[$y][$x] = new Cell($x, $y, null);
                 }
             }
         }

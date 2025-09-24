@@ -2,6 +2,9 @@
 
 namespace Life;
 
+use Life\DTO\GameConfig;
+use Life\Persistence\IOFabric;
+use Life\Service\EvolutionDecisionManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -27,8 +30,13 @@ final class RunGameCommand extends Command
         $outputFile = $input->getOption('output');
         assert(is_string($outputFile));
 
-        $game = new Game();
-        $game->run($inputFile, $outputFile);
+        $gameConfig = new GameConfig($inputFile, $outputFile);
+        $game = new Game(
+
+            new StateManager($gameConfig, new IOFabric()),
+            new EvolutionDecisionManager()
+        );
+        $game->run();
 
         $output->writeln('File ' . $outputFile . ' was saved.');
 
